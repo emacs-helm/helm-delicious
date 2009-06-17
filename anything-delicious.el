@@ -135,8 +135,10 @@
          (auth-source-user-or-password  '("login" "password")
                                         "api.del.icio.us:443"
                                         "https")))
-    (setq anything-delicious-user (car anything-delicious-auth)) 
-    (setq anything-delicious-password (cadr anything-delicious-auth))))
+    (when anything-delicious-auth
+      (setq anything-delicious-user (car anything-delicious-auth)
+            anything-delicious-password (cadr anything-delicious-auth))
+      nil)))
 
 (defun anything-wget-retrieve-delicious ()
   "Get the delicious bookmarks asynchronously
