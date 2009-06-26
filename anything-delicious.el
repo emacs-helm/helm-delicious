@@ -38,16 +38,29 @@
 ;;
 ;; Add to .emacs:
 ;; (require 'anything-delicious)
+;;
 ;; after subscribing to http://delicious.com/
 ;; Setup your login and delicious password:
+;;
 ;; You can set it up in your init file with
+;;
 ;; `anything-delicious-user' and `anything-delicious-password'
+;; (use setq)
+;;
 ;; or better:
-;; Add a line like:
+;;
+;; Add a line like this in your .authinfo file:
+;;
 ;; machine api.del.icio.us:443 port https login xxxxx password xxxxx
-;; in your .authinfo file, add to you init file (.emacs):
+;;
+;; and add to you init file (.emacs):
 ;; (require 'auth-source)
-;; (anything-delicious-authentify "path/to/your/.authinfo/file")
+;;
+;; (if (file-exists-p "~/.authinfo.gpg")
+;;     (setq auth-sources '((:source "~/.authinfo.gpg" :host t :protocol t)))
+;;     (setq auth-sources '((:source "~/.authinfo" :host t :protocol t))))
+;; 
+;; (anything-delicious-authentify)
 ;;
 ;; Use:
 ;; ===
@@ -128,9 +141,10 @@
 
 (add-hook 'anything-cleanup-hook 'anything-delicious-remove-flag)
 
-(defun anything-delicious-authentify (path)
+(defun anything-delicious-authentify ()
   "Authentify user from .authinfo file.
-`path' is the path of you .authinfo file, usually ~/.authinfo."
+You have to setup correctly `auth-sources' to make this function
+finding the path of your .authinfo file that is normally ~/.authinfo."
   (let ((anything-delicious-auth
          (auth-source-user-or-password  '("login" "password")
                                         "api.del.icio.us:443"
