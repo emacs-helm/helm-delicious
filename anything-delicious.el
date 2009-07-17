@@ -300,7 +300,7 @@ with external program wget"
                                            (replace-regexp-in-string "\+" " "
                                                                      description)
                                            tag)
-                  (message "%s added to w3m-bookmarks" description)))))))))
+                  (message "%s added to w3m-bookmarks" description))))))))
 
 (defun anything-delicious-get-all-tags-from-cache ()
   "Get the list of all your tags from Delicious
