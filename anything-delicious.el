@@ -158,29 +158,35 @@ finding the path of your .authinfo file that is normally ~/.authinfo."
   "Get the delicious bookmarks asynchronously
 with external program wget"
   (interactive)
-  (start-process-shell-command "wget-retrieve-delicious" nil "wget"
-                              (format "-q -O %s --user %s --password %s %s"
-                                      anything-c-delicious-cache-file
-                                      anything-delicious-user
-                                      anything-delicious-password
-                                      anything-c-delicious-api-url))
-  (set-process-sentinel (get-process "wget-retrieve-delicious")
-                        #'(lambda (process event)
-                            (message
-                             "%s is %s Delicious bookmarks should be up to date!"
-                             process
-                             event)
-                            (setq anything-c-delicious-cache nil))))
+  (let (anything-delicious-user anything-delicious-password)
+    (unless (and anything-delicious-user anything-delicious-password)
+      (anything-delicious-authentify))
+    (start-process-shell-command "wget-retrieve-delicious" nil "wget"
+                                 (format "-q -O %s --user %s --password %s %s"
+                                         anything-c-delicious-cache-file
+                                         anything-delicious-user
+                                         anything-delicious-password
+                                         anything-c-delicious-api-url))
+    (set-process-sentinel (get-process "wget-retrieve-delicious")
+                          #'(lambda (process event)
+                              (message
+                               "%s is %s Delicious bookmarks should be up to date!"
+                               process
+                               event)
+                              (setq anything-c-delicious-cache nil)))))
 
 
 (defun anything-c-delicious-delete-bookmark (candidate)
   "Delete delicious bookmark on the delicious side"
-  (let* ((url (anything-c-delicious-bookmarks-get-value candidate))
-         (auth (concat anything-delicious-user
-                       ":"
-                       anything-delicious-password))
+  (let* ((url     (anything-c-delicious-bookmarks-get-value candidate))
          (url-api (format anything-c-delicious-api-url-delete
-                          url)))
+                          url))
+         anything-delicious-user
+         anything-delicious-password
+         auth)
+    (unless (and anything-delicious-user anything-delicious-password)
+      (anything-delicious-authentify))
+    (setq auth (concat anything-delicious-user ":" anything-delicious-password))
     (message "Wait sending request to delicious...")
     (setq anything-delicious-last-candidate-to-deletion candidate)
     (apply #'start-process "curl-delicious-delete" "*delicious-delete*" "curl"
@@ -227,7 +233,7 @@ with external program wget"
 
 (defun anything-set-up-delicious-bookmarks-alist ()
   "Setup an alist of all delicious bookmarks from xml file"
-  (let ((gen-alist nil)
+  (let ((gen-alist   nil)
         (final-alist nil))
     (unless (file-exists-p anything-c-delicious-cache-file)
       (message "Wait Loading bookmarks from Delicious...")
@@ -256,14 +262,17 @@ with external program wget"
                                       (anything-delicious-get-all-tags-from-cache))))
   (setq description
         (replace-regexp-in-string " " "+" description))
-  (let* ((url w3m-current-url)
-         (auth (concat anything-delicious-user
-                       ":"
-                       anything-delicious-password))
+  (let* ((url     w3m-current-url)
          (url-api (format anything-c-delicious-api-url-add
                           url
                           description
-                          tag)))
+                          tag))
+         anything-delicious-user
+         anything-delicious-password
+         auth)
+    (unless (and anything-delicious-user anything-delicious-password)
+      (anything-delicious-authentify))
+    (setq auth (concat anything-delicious-user ":" anything-delicious-password))
     (with-temp-buffer
       (apply #'call-process "curl" nil t nil
              `("-u"
@@ -291,7 +300,7 @@ with external program wget"
                                            (replace-regexp-in-string "\+" " "
                                                                      description)
                                            tag)
-                  (message "%s added to w3m-bookmarks" description))))))))
+                  (message "%s added to w3m-bookmarks" description)))))))))
 
 (defun anything-delicious-get-all-tags-from-cache ()
   "Get the list of all your tags from Delicious
@@ -322,7 +331,7 @@ to Delicious"
 
 (defun anything-c-delicious-browse-bookmark (elm &optional use-firefox new-tab)
   "Action function for anything-delicious"
-  (let* ((fn (if use-firefox
+  (let* ((fn  (if use-firefox
                 'browse-url-firefox
                 'w3m-browse-url))
          (arg (if (and (eq fn 'w3m-browse-url)
