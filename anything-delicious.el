@@ -59,8 +59,11 @@
 ;; (if (file-exists-p "~/.authinfo.gpg")
 ;;     (setq auth-sources '((:source "~/.authinfo.gpg" :host t :protocol t)))
 ;;     (setq auth-sources '((:source "~/.authinfo" :host t :protocol t))))
-;; 
-;; (anything-delicious-authentify)
+;;
+;; Warning:
+;;
+;; DON'T CALL `anything-delicious-authentify', this will set your login and password
+;; globally.
 ;;
 ;; Use:
 ;; ===
