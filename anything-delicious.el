@@ -157,7 +157,7 @@ finding the path of your .authinfo file that is normally ~/.authinfo."
             anything-delicious-password (cadr anything-delicious-auth))
       nil)))
 
-(defun anything-wget-retrieve-delicious ()
+(defun anything-wget-retrieve-delicious (&optional sentinel)
   "Get the delicious bookmarks asynchronously
 with external program wget"
   (interactive)
@@ -171,12 +171,14 @@ with external program wget"
                                          anything-delicious-password
                                          anything-c-delicious-api-url))
     (set-process-sentinel (get-process "wget-retrieve-delicious")
-                          #'(lambda (process event)
-                              (message
-                               "%s is %s Delicious bookmarks should be up to date!"
-                               process
-                               event)
-                              (setq anything-c-delicious-cache nil)))))
+                          (if sentinel
+                              sentinel
+                              #'(lambda (process event)
+                                  (message
+                                   "%s is %s Delicious bookmarks should be up to date!"
+                                   process
+                                   event)
+                                  (setq anything-c-delicious-cache nil))))))
 
 
 (defun anything-c-delicious-delete-bookmark (candidate)
