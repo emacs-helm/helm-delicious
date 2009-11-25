@@ -181,9 +181,11 @@ with external program wget"
                                   (setq anything-c-delicious-cache nil))))))
 
 
-(defun anything-c-delicious-delete-bookmark (candidate)
+(defun anything-c-delicious-delete-bookmark (candidate &optional url-value-fn sentinel)
   "Delete delicious bookmark on the delicious side"
-  (let* ((url     (anything-c-delicious-bookmarks-get-value candidate))
+  (let* ((url     (if url-value-fn
+                      (funcall url-value-fn candidate)
+                      (anything-c-delicious-bookmarks-get-value candidate)))
          (url-api (format anything-c-delicious-api-url-delete
                           url))
          anything-delicious-user
@@ -199,7 +201,9 @@ with external program wget"
                          auth
                          url-api))
     (set-process-sentinel (get-process "curl-delicious-delete")
-                          'anything-delicious-delete-sentinel)))
+                          (if sentinel
+                              sentinel
+                              'anything-delicious-delete-sentinel))))
 
 
 (defun anything-delicious-delete-sentinel (process event)
@@ -229,7 +233,7 @@ with external program wget"
     (save-excursion
       (find-file anything-c-delicious-cache-file)
       (goto-char (point-min))
-      (when (re-search-forward cand)
+      (when (re-search-forward cand (point-max) t)
         (beginning-of-line)
         (delete-region (point) (point-at-eol))
         (delete-blank-lines))
