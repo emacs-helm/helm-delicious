@@ -128,8 +128,8 @@
                              (message "Wait Loading bookmarks from Delicious...")
                              (anything-wget-retrieve-delicious)))
                ("Browse Url Firefox" . (lambda (candidate)
-                                         (anything-c-delicious-browse-bookmark candidate t)))))
-    (delayed)))
+                                         (anything-c-delicious-browse-bookmark candidate t)))))))
+
 
 ;; (anything 'anything-c-source-delicious-tv)
 
