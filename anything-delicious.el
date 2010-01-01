@@ -158,15 +158,18 @@ finding the path of your .authinfo file that is normally ~/.authinfo."
       nil)))
 
 (defun anything-wget-retrieve-delicious (&optional sentinel)
-  "Get the delicious bookmarks asynchronously
-with external program wget"
+  "Get the delicious bookmarks asynchronously with external program wget."
   (interactive)
-  (let (anything-delicious-user anything-delicious-password)
+  (let ((fmd-command (if (eq system-type 'windows-nt)
+                         "-q --no-check-certificate -O %s --user %s --password %s %s"
+                         "-q -O %s --user %s --password %s %s"))
+        anything-delicious-user
+        anything-delicious-password)
     (unless (and anything-delicious-user anything-delicious-password)
       (anything-delicious-authentify))
     (message "Syncing with Delicious in Progress...")
     (start-process-shell-command "wget-retrieve-delicious" nil "wget"
-                                 (format "-q -O %s --user %s --password %s %s"
+                                 (format fmd-command
                                          anything-c-delicious-cache-file
                                          anything-delicious-user
                                          anything-delicious-password
