@@ -204,9 +204,7 @@ finding the path of your .authinfo file that is normally ~/.authinfo."
                          auth
                          url-api))
     (set-process-sentinel (get-process "curl-delicious-delete")
-                          (if sentinel
-                              sentinel
-                              'anything-delicious-delete-sentinel))))
+                          (or sentinel 'anything-delicious-delete-sentinel))))
 
 
 (defun anything-delicious-delete-sentinel (process event)
@@ -233,8 +231,7 @@ finding the path of your .authinfo file that is normally ~/.authinfo."
   "Delete delicious bookmark on the local side"
   (let ((cand (when (string-match "\\[.*\\]" candidate)
                 (substring candidate (1+ (match-end 0))))))
-    (save-excursion
-      (find-file anything-c-delicious-cache-file)
+    (with-current-buffer (find-file-noselect anything-c-delicious-cache-file)
       (goto-char (point-min))
       (when (re-search-forward cand (point-max) t)
         (beginning-of-line)
@@ -245,8 +242,7 @@ finding the path of your .authinfo file that is normally ~/.authinfo."
 
 (defun anything-set-up-delicious-bookmarks-alist ()
   "Setup an alist of all delicious bookmarks from xml file"
-  (let ((gen-alist   nil)
-        (final-alist nil))
+  (let ((gen-alist ()))
     (unless (file-exists-p anything-c-delicious-cache-file)
       (message "Wait Loading bookmarks from Delicious...")
       (anything-wget-retrieve-delicious))
@@ -256,13 +252,10 @@ finding the path of your .authinfo file that is normally ~/.authinfo."
                        (car (xml-parse-region (point-min)
                                               (point-max)))
                        'post)))
-    (setq final-alist
-          (loop for i in gen-alist
-             collect (cons (concat "["
-                                   (xml-get-attribute i 'tag)
-                                   "] "
-                                   (xml-get-attribute i 'description))
-                           (xml-get-attribute i 'href))))))
+    (loop for i in gen-alist
+       collect (cons (concat "[" (xml-get-attribute i 'tag) "] "
+                             (xml-get-attribute i 'description))
+                     (xml-get-attribute i 'href)))))
 
 
 (defun w3m-add-delicious-bookmark (description tag)
@@ -275,10 +268,7 @@ finding the path of your .authinfo file that is normally ~/.authinfo."
   (setq description
         (replace-regexp-in-string " " "+" description))
   (let* ((url     w3m-current-url)
-         (url-api (format anything-c-delicious-api-url-add
-                          url
-                          description
-                          tag))
+         (url-api (format anything-c-delicious-api-url-add url description tag))
          anything-delicious-user
          anything-delicious-password
          auth)
@@ -318,56 +308,38 @@ finding the path of your .authinfo file that is normally ~/.authinfo."
   "Get the list of all your tags from Delicious
 That is used for completion on tags when adding bookmarks
 to Delicious"
-  (save-excursion
+  (with-current-buffer (find-file-noselect anything-c-delicious-cache-file)
     (goto-char (point-min))
-    (find-file anything-c-delicious-cache-file)
-    (let ((temp-tag-list)
-          (tag-list)
-          (tag (xml-get-children (car (xml-parse-region (point-min)
-                                                        (point-max)))
-                                 'post)))
+    (let* ((all (car (xml-parse-region (point-min) (point-max))))
+           (tag (xml-get-children all 'post))
+           tag-list)
       (dolist (i tag)
-        (push (xml-get-attribute i 'tag) temp-tag-list))
-      (save-buffer)
-      (kill-buffer (current-buffer))
-      (dolist (n temp-tag-list)
-        (when (not (member n tag-list))
-          (push n tag-list)))
+        (let ((tg (xml-get-attribute i 'tag)))
+          (unless (member tg tag-list) (push tg tag-list))))
+      (kill-buffer)
       tag-list)))
 
 (defun anything-c-delicious-bookmarks-get-value (elm)
   "Get the value of key elm from alist"
-  (replace-regexp-in-string "\"" ""
-                            (cdr (assoc elm
-                                        anything-c-delicious-cache))))
+  (replace-regexp-in-string
+   "\"" "" (cdr (assoc elm anything-c-delicious-cache))))
 
 (defun anything-c-delicious-browse-bookmark (elm &optional use-firefox new-tab)
   "Action function for anything-delicious"
-  (let* ((fn  (if use-firefox
-                'browse-url-firefox
-                'w3m-browse-url))
-         (arg (if (and (eq fn 'w3m-browse-url)
-                       new-tab)
-                  t
-                  nil)))
+  (let* ((fn  (if use-firefox 'browse-url-firefox 'w3m-browse-url))
+         (arg (and (eq fn 'w3m-browse-url) new-tab)))
     (funcall fn (anything-c-delicious-bookmarks-get-value elm) arg)))
 
 (defun anything-c-highlight-delicious-bookmarks (books)
   "Highlight all Delicious bookmarks"
-  (let* (tag
-         rest-text
-         (cand-mod (loop for i in books
-                        do
-                        (setq tag (progn
-                                    (string-match "\\[.*\\]" i)
-                                    (match-string 0 i))
-                              rest-text (substring i (match-end 0)))
-                      collect (concat (propertize tag
-                                          'face 'anything-delicious-tag-face)
-                                      (propertize rest-text
-                                                  'face 'anything-w3m-bookmarks-face
-                                                  'help-echo (anything-c-delicious-bookmarks-get-value i))))))
-    cand-mod))
+  (let (tag rest-text)
+    (loop for i in books
+       when (string-match "\\[.*\\]" i)
+       collect (concat (propertize (match-string 0 i)
+                                   'face 'anything-delicious-tag-face)
+                       (propertize (substring i (match-end 0))
+                                   'face 'anything-w3m-bookmarks-face
+                                   'help-echo (anything-c-delicious-bookmarks-get-value i))))))
 
 (defun anything-delicious ()
   "Start anything-delicious outside of main anything"
