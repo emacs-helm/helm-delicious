@@ -113,9 +113,7 @@
               (unless anything-c-delicious-cache
                 (setq anything-c-delicious-cache
                       (anything-set-up-delicious-bookmarks-alist)))))
-    (candidates . (lambda ()
-                    (mapcar #'car
-                            anything-c-delicious-cache)))
+    (candidates . (lambda () (mapcar #'car anything-c-delicious-cache)))
     (candidate-transformer anything-c-highlight-delicious-bookmarks)
     (action . (("Browse Url" . (lambda (elm)
                                  (anything-c-delicious-browse-bookmark elm)
@@ -347,7 +345,8 @@ to Delicious"
   (setq anything-source-is-delicious t)
   (let ((rem-pattern (if anything-delicious-last-pattern
                          anything-delicious-last-pattern)))
-    (anything 'anything-c-source-delicious-tv rem-pattern)))
+    (anything 'anything-c-source-delicious-tv
+              rem-pattern nil nil nil "*Anything Delicious*")))
 
 (provide 'anything-delicious)
 
