@@ -240,10 +240,16 @@ finding the path of your .authinfo file that is normally ~/.authinfo."
 
 (defun anything-set-up-delicious-bookmarks-alist ()
   "Setup an alist of all delicious bookmarks from xml file"
-  (let ((gen-alist ()))
+  (let ((gen-alist ())
+        (tag-list ())
+        (tag-len 0))
     (unless (file-exists-p anything-c-delicious-cache-file)
       (message "Wait Loading bookmarks from Delicious...")
       (anything-wget-retrieve-delicious))
+    (setq tag-list (anything-delicious-get-all-tags-from-cache))
+    (loop for i in tag-list
+       for len = (length i) 
+       when (> len tag-len) do (setq tag-len len))
     (with-temp-buffer
       (insert-file-contents anything-c-delicious-cache-file)
       (setq gen-alist (xml-get-children
@@ -251,9 +257,13 @@ finding the path of your .authinfo file that is normally ~/.authinfo."
                                               (point-max)))
                        'post)))
     (loop for i in gen-alist
-       collect (cons (concat "[" (xml-get-attribute i 'tag) "] "
-                             (xml-get-attribute i 'description))
-                     (xml-get-attribute i 'href)))))
+       for tag = (xml-get-attribute i 'tag)
+       for desc = (xml-get-attribute i 'description)
+       for url = (xml-get-attribute i 'href)
+       for interval = (- tag-len (length tag))
+       collect (cons (concat "[" tag "]"
+                             (make-string (+ 2 interval) ? ) desc)
+                     url))))
 
 
 (defun w3m-add-delicious-bookmark (description tag)
@@ -332,7 +342,7 @@ to Delicious"
   "Highlight all Delicious bookmarks"
   (let (tag rest-text)
     (loop for i in books
-       when (string-match "\\[.*\\]" i)
+       when (string-match "\\[.*\\] *" i)
        collect (concat (propertize (match-string 0 i)
                                    'face 'anything-delicious-tag-face)
                        (propertize (substring i (match-end 0))
