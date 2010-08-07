@@ -81,7 +81,7 @@
 
 ;; User variables
 (defvar anything-c-delicious-api-url
-  "https://api.del.icio.us/posts/all"
+  "https://api.del.icio.us/v1/posts/all?"
   "Url used to retrieve all bookmarks")
 (defvar anything-c-delicious-api-url-delete
   "https://api.del.icio.us/v1/posts/delete?&url=%s"
