@@ -158,9 +158,7 @@ finding the path of your .authinfo file that is normally ~/.authinfo."
 (defun anything-wget-retrieve-delicious (&optional sentinel)
   "Get the delicious bookmarks asynchronously with external program wget."
   (interactive)
-  (let ((fmd-command (if (eq system-type 'windows-nt)
-                         "wget -q --no-check-certificate -O %s --user %s --password %s %s"
-                         "wget -q -O %s --user %s --password %s %s"))
+  (let ((fmd-command "wget -q --no-check-certificate -O %s --user %s --password %s %s")
         anything-delicious-user
         anything-delicious-password)
     (unless (and anything-delicious-user anything-delicious-password)
