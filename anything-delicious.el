@@ -1,8 +1,8 @@
-;;; anything-delicious.el --- 
+;;; helm-delicious.el --- 
 
 ;; Copyright (C) 2008, 2009 Thierry Volpiatto, all rights reserved
 
-;; Filename: anything-delicious.el
+;; Filename: helm-delicious.el
 ;; Description: 
 ;; Author: thierry
 ;; Maintainer: 
@@ -30,21 +30,21 @@
 ;;; Commentary:
 ;;  ==========
 ;;
-;; Anything interface for Delicious bookmarks.
+;; Helm interface for Delicious bookmarks.
 ;; This code use curl and wget.
-;; You need to install `anything' also.
+;; You need to install `helm' also.
 ;; Install:
 ;; =======
 ;;
 ;; Add to .emacs:
-;; (require 'anything-delicious)
+;; (require 'helm-delicious)
 ;;
 ;; after subscribing to http://delicious.com/
 ;; Setup your login and delicious password:
 ;;
 ;; You can set it up in your init file with
 ;;
-;; `anything-delicious-user' and `anything-delicious-password'
+;; `helm-delicious-user' and `helm-delicious-password'
 ;; (use setq)
 ;;
 ;; or better:
@@ -62,16 +62,16 @@
 ;;
 ;; Warning:
 ;;
-;; DON'T CALL `anything-delicious-authentify', this will set your login and password
+;; DON'T CALL `helm-delicious-authentify', this will set your login and password
 ;; globally.
 ;;
 ;; Use:
 ;; ===
 ;;
-;; M-x anything-delicious
+;; M-x helm-delicious
 ;; That should create a "~/.delicious-cache" file.
-;; (you can set that to another value with `anything-c-delicious-cache-file')
-;; You can also add `anything-c-source-delicious-tv' to the `anything-sources'.
+;; (you can set that to another value with `helm-c-delicious-cache-file')
+;; You can also add `helm-c-source-delicious-tv' to the `helm-sources'.
 ;; 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
  
@@ -80,97 +80,97 @@
 (require 'xml)
 
 ;; User variables
-(defvar anything-c-delicious-api-url
+(defvar helm-c-delicious-api-url
   "https://api.del.icio.us/v1/posts/all?"
   "Url used to retrieve all bookmarks")
-(defvar anything-c-delicious-api-url-delete
+(defvar helm-c-delicious-api-url-delete
   "https://api.del.icio.us/v1/posts/delete?&url=%s"
   "Url used to delete bookmarks from delicious")
-(defvar anything-c-delicious-api-url-add
+(defvar helm-c-delicious-api-url-add
   "https://api.del.icio.us/v1/posts/add?&url=%s&description=%s&tags=%s"
   "Url used to add bookmarks to delicious")
-(defvar anything-c-delicious-cache-file "~/.delicious.cache")
-(defvar anything-delicious-user nil
+(defvar helm-c-delicious-cache-file "~/.delicious.cache")
+(defvar helm-delicious-user nil
   "Your Delicious login")
-(defvar anything-delicious-password nil
+(defvar helm-delicious-password nil
   "Your Delicious password")
 
 ;; Faces
-(defface anything-delicious-tag-face '((t (:foreground "VioletRed4" :weight bold)))
-  "Face for w3m bookmarks" :group 'anything)
+(defface helm-delicious-tag-face '((t (:foreground "VioletRed4" :weight bold)))
+  "Face for w3m bookmarks" :group 'helm)
 
-(defface anything-w3m-bookmarks-face '((t (:foreground "cyan1" :underline t)))
-  "Face for w3m bookmarks" :group 'anything)
+(defface helm-w3m-bookmarks-face '((t (:foreground "cyan1" :underline t)))
+  "Face for w3m bookmarks" :group 'helm)
 
 ;; Internal variables (don't modify)
-(defvar anything-c-delicious-cache nil)
-(defvar anything-delicious-last-candidate-to-deletion nil)
-(defvar anything-delicious-last-pattern nil)
+(defvar helm-c-delicious-cache nil)
+(defvar helm-delicious-last-candidate-to-deletion nil)
+(defvar helm-delicious-last-pattern nil)
                                      
-(defvar anything-c-source-delicious-tv
+(defvar helm-c-source-delicious-tv
   '((name . "Del.icio.us")
     (init . (lambda ()
-              (unless anything-c-delicious-cache
-                (setq anything-c-delicious-cache
-                      (anything-set-up-delicious-bookmarks-alist)))))
-    (candidates . (lambda () (mapcar #'car anything-c-delicious-cache)))
-    (candidate-transformer anything-c-highlight-delicious-bookmarks)
+              (unless helm-c-delicious-cache
+                (setq helm-c-delicious-cache
+                      (helm-set-up-delicious-bookmarks-alist)))))
+    (candidates . (lambda () (mapcar #'car helm-c-delicious-cache)))
+    (candidate-transformer helm-c-highlight-delicious-bookmarks)
     (action . (("Browse Url" . (lambda (elm)
-                                 (anything-c-delicious-browse-bookmark elm)
-                                 (setq anything-delicious-last-pattern anything-pattern)))
+                                 (helm-c-delicious-browse-bookmark elm)
+                                 (setq helm-delicious-last-pattern helm-pattern)))
                ("Browse Url Firefox" . (lambda (candidate)
-                                         (anything-c-delicious-browse-bookmark candidate t)))
+                                         (helm-c-delicious-browse-bookmark candidate t)))
                ("Delete bookmark" . (lambda (elm)
-                                      (anything-c-delicious-delete-bookmark elm)))
+                                      (helm-c-delicious-delete-bookmark elm)))
                ("Copy Url" . (lambda (elm)
-                               (kill-new (anything-c-delicious-bookmarks-get-value elm))))
+                               (kill-new (helm-c-delicious-bookmarks-get-value elm))))
                ("Update" . (lambda (elm)
                              (message "Wait Loading bookmarks from Delicious...")
-                             (anything-wget-retrieve-delicious)))))))
+                             (helm-wget-retrieve-delicious)))))))
 
 
-;; (anything 'anything-c-source-delicious-tv)
+;; (helm 'helm-c-source-delicious-tv)
 
-(defvar anything-source-is-delicious nil)
-(defadvice anything-select-action (before remember-anything-pattern () activate)
-  "Remember anything-pattern when opening anything-action-buffer"
-  (when anything-source-is-delicious
-    (setq anything-delicious-last-pattern anything-pattern)))
+(defvar helm-source-is-delicious nil)
+(defadvice helm-select-action (before remember-helm-pattern () activate)
+  "Remember helm-pattern when opening helm-action-buffer"
+  (when helm-source-is-delicious
+    (setq helm-delicious-last-pattern helm-pattern)))
 
-(defun anything-delicious-remove-flag ()
-  (setq anything-source-is-delicious nil))
+(defun helm-delicious-remove-flag ()
+  (setq helm-source-is-delicious nil))
 
-(add-hook 'anything-cleanup-hook 'anything-delicious-remove-flag)
+(add-hook 'helm-cleanup-hook 'helm-delicious-remove-flag)
 
-(defun anything-delicious-authentify ()
+(defun helm-delicious-authentify ()
   "Authentify user from .authinfo file.
 You have to setup correctly `auth-sources' to make this function
 finding the path of your .authinfo file that is normally ~/.authinfo."
-  (let ((anything-delicious-auth
+  (let ((helm-delicious-auth
          (auth-source-user-or-password  '("login" "password")
                                         "api.del.icio.us:443"
                                         "https")))
-    (when anything-delicious-auth
-      (setq anything-delicious-user (car anything-delicious-auth)
-            anything-delicious-password (cadr anything-delicious-auth))
+    (when helm-delicious-auth
+      (setq helm-delicious-user (car helm-delicious-auth)
+            helm-delicious-password (cadr helm-delicious-auth))
       nil)))
 
-(defun anything-wget-retrieve-delicious (&optional sentinel)
+(defun helm-wget-retrieve-delicious (&optional sentinel)
   "Get the delicious bookmarks asynchronously with external program wget."
   (interactive)
   (let ((fmd-command "wget -q --no-check-certificate -O %s --user %s --password %s %s")
-        anything-delicious-user
-        anything-delicious-password)
-    (unless (and anything-delicious-user anything-delicious-password)
-      (anything-delicious-authentify))
+        helm-delicious-user
+        helm-delicious-password)
+    (unless (and helm-delicious-user helm-delicious-password)
+      (helm-delicious-authentify))
     (message "Syncing with Delicious in Progress...")
     (start-process-shell-command
      "wget-retrieve-delicious" nil
      (format fmd-command
-             anything-c-delicious-cache-file
-             anything-delicious-user
-             anything-delicious-password
-             anything-c-delicious-api-url))
+             helm-c-delicious-cache-file
+             helm-delicious-user
+             helm-delicious-password
+             helm-c-delicious-api-url))
     (set-process-sentinel
      (get-process "wget-retrieve-delicious")
      (if sentinel
@@ -179,57 +179,57 @@ finding the path of your .authinfo file that is normally ~/.authinfo."
              (if (string= event "finished\n")
                  (message "Syncing with Delicious...Done.")
                  (message "Failed to synchronize with Delicious."))
-             (setq anything-c-delicious-cache nil))))))
+             (setq helm-c-delicious-cache nil))))))
 
 
-(defun anything-c-delicious-delete-bookmark (candidate &optional url-value-fn sentinel)
+(defun helm-c-delicious-delete-bookmark (candidate &optional url-value-fn sentinel)
   "Delete delicious bookmark on the delicious side"
   (let* ((url     (if url-value-fn
                       (funcall url-value-fn candidate)
-                      (anything-c-delicious-bookmarks-get-value candidate)))
-         (url-api (format anything-c-delicious-api-url-delete
+                      (helm-c-delicious-bookmarks-get-value candidate)))
+         (url-api (format helm-c-delicious-api-url-delete
                           url))
-         anything-delicious-user
-         anything-delicious-password
+         helm-delicious-user
+         helm-delicious-password
          auth)
-    (unless (and anything-delicious-user anything-delicious-password)
-      (anything-delicious-authentify))
-    (setq auth (concat anything-delicious-user ":" anything-delicious-password))
+    (unless (and helm-delicious-user helm-delicious-password)
+      (helm-delicious-authentify))
+    (setq auth (concat helm-delicious-user ":" helm-delicious-password))
     (message "Wait sending request to delicious...")
-    (setq anything-delicious-last-candidate-to-deletion candidate)
+    (setq helm-delicious-last-candidate-to-deletion candidate)
     (apply #'start-process "curl-delicious-delete" "*delicious-delete*" "curl"
                    (list "-u"
                          auth
                          url-api))
     (set-process-sentinel (get-process "curl-delicious-delete")
-                          (or sentinel 'anything-delicious-delete-sentinel))))
+                          (or sentinel 'helm-delicious-delete-sentinel))))
 
 
-(defun anything-delicious-delete-sentinel (process event)
-  "Sentinel func for `anything-c-delicious-delete-bookmark'"
+(defun helm-delicious-delete-sentinel (process event)
+  "Sentinel func for `helm-c-delicious-delete-bookmark'"
   (message "%s process is %s" process event)
   (sit-for 1)
   (with-current-buffer "*delicious-delete*"
     (goto-char (point-min))
     (if (re-search-forward "<result code=\"done\" />" nil t)
         (progn
-          (anything-c-delicious-delete-bookmark-local
-           anything-delicious-last-candidate-to-deletion)
-          (setq anything-c-delicious-cache nil)
+          (helm-c-delicious-delete-bookmark-local
+           helm-delicious-last-candidate-to-deletion)
+          (setq helm-c-delicious-cache nil)
           (message "Ok %s have been deleted with success"
                    (substring-no-properties
-                    anything-delicious-last-candidate-to-deletion)))
+                    helm-delicious-last-candidate-to-deletion)))
         (message "Fail to delete %s"
                  (substring-no-properties
-                  anything-delicious-last-candidate-to-deletion)))
-    (setq anything-delicious-last-candidate-to-deletion nil)))
+                  helm-delicious-last-candidate-to-deletion)))
+    (setq helm-delicious-last-candidate-to-deletion nil)))
 
 
-(defun anything-c-delicious-delete-bookmark-local (candidate)
+(defun helm-c-delicious-delete-bookmark-local (candidate)
   "Delete delicious bookmark on the local side"
   (let ((cand (when (string-match "\\[.*\\]" candidate)
                 (substring candidate (1+ (match-end 0))))))
-    (with-current-buffer (find-file-noselect anything-c-delicious-cache-file)
+    (with-current-buffer (find-file-noselect helm-c-delicious-cache-file)
       (goto-char (point-min))
       (when (re-search-forward cand (point-max) t)
         (beginning-of-line)
@@ -238,20 +238,20 @@ finding the path of your .authinfo file that is normally ~/.authinfo."
       (save-buffer)
       (kill-buffer (current-buffer)))))
 
-(defun anything-set-up-delicious-bookmarks-alist ()
+(defun helm-set-up-delicious-bookmarks-alist ()
   "Setup an alist of all delicious bookmarks from xml file"
   (let ((gen-alist ())
         (tag-list ())
         (tag-len 0))
-    (unless (file-exists-p anything-c-delicious-cache-file)
+    (unless (file-exists-p helm-c-delicious-cache-file)
       (message "Wait Loading bookmarks from Delicious...")
-      (anything-wget-retrieve-delicious))
-    (setq tag-list (anything-delicious-get-all-tags-from-cache))
+      (helm-wget-retrieve-delicious))
+    (setq tag-list (helm-delicious-get-all-tags-from-cache))
     (loop for i in tag-list
        for len = (length i) 
        when (> len tag-len) do (setq tag-len len))
     (with-temp-buffer
-      (insert-file-contents anything-c-delicious-cache-file)
+      (insert-file-contents helm-c-delicious-cache-file)
       (setq gen-alist (xml-get-children
                        (car (xml-parse-region (point-min)
                                               (point-max)))
@@ -272,17 +272,17 @@ finding the path of your .authinfo file that is normally ~/.authinfo."
                                            nil nil nil nil
                                            w3m-current-title)
                      (completing-read "Tag: "
-                                      (anything-delicious-get-all-tags-from-cache))))
+                                      (helm-delicious-get-all-tags-from-cache))))
   (setq description
         (replace-regexp-in-string " " "+" description))
   (let* ((url     w3m-current-url)
-         (url-api (format anything-c-delicious-api-url-add url description tag))
-         anything-delicious-user
-         anything-delicious-password
+         (url-api (format helm-c-delicious-api-url-add url description tag))
+         helm-delicious-user
+         helm-delicious-password
          auth)
-    (unless (and anything-delicious-user anything-delicious-password)
-      (anything-delicious-authentify))
-    (setq auth (concat anything-delicious-user ":" anything-delicious-password))
+    (unless (and helm-delicious-user helm-delicious-password)
+      (helm-delicious-authentify))
+    (setq auth (concat helm-delicious-user ":" helm-delicious-password))
     (with-temp-buffer
       (apply #'call-process "curl" nil t nil
              `("-u"
@@ -301,7 +301,7 @@ finding the path of your .authinfo file that is normally ~/.authinfo."
                                                                       description)
                                             tag)
                    (message "%s added to delicious and to w3m-bookmarks" description)))
-            (anything-wget-retrieve-delicious))
+            (helm-wget-retrieve-delicious))
           (message "Fail to add bookmark to delicious")
           (when current-prefix-arg
             (if (y-or-n-p "Add anyway to w3m-bookmarks?")
@@ -312,11 +312,11 @@ finding the path of your .authinfo file that is normally ~/.authinfo."
                                            tag)
                   (message "%s added to w3m-bookmarks" description))))))))
 
-(defun anything-delicious-get-all-tags-from-cache ()
+(defun helm-delicious-get-all-tags-from-cache ()
   "Get the list of all your tags from Delicious
 That is used for completion on tags when adding bookmarks
 to Delicious"
-  (with-current-buffer (find-file-noselect anything-c-delicious-cache-file)
+  (with-current-buffer (find-file-noselect helm-c-delicious-cache-file)
     (goto-char (point-min))
     (let* ((all (car (xml-parse-region (point-min) (point-max))))
            (tag (xml-get-children all 'post))
@@ -327,39 +327,37 @@ to Delicious"
       (kill-buffer)
       tag-list)))
 
-(defun anything-c-delicious-bookmarks-get-value (elm)
+(defun helm-c-delicious-bookmarks-get-value (elm)
   "Get the value of key elm from alist"
   (replace-regexp-in-string
-   "\"" "" (cdr (assoc elm anything-c-delicious-cache))))
+   "\"" "" (cdr (assoc elm helm-c-delicious-cache))))
 
-(defun anything-c-delicious-browse-bookmark (elm &optional use-firefox new-tab)
-  "Action function for anything-delicious"
+(defun helm-c-delicious-browse-bookmark (elm &optional use-firefox new-tab)
+  "Action function for helm-delicious"
   (let* ((fn  (if use-firefox 'browse-url-firefox 'w3m-browse-url))
          (arg (and (eq fn 'w3m-browse-url) new-tab)))
-    (funcall fn (anything-c-delicious-bookmarks-get-value elm) arg)))
+    (funcall fn (helm-c-delicious-bookmarks-get-value elm) arg)))
 
-(defun anything-c-highlight-delicious-bookmarks (books)
+(defun helm-c-highlight-delicious-bookmarks (books)
   "Highlight all Delicious bookmarks"
   (let (tag rest-text)
     (loop for i in books
        when (string-match "\\[.*\\] *" i)
        collect (concat (propertize (match-string 0 i)
-                                   'face 'anything-delicious-tag-face)
+                                   'face 'helm-delicious-tag-face)
                        (propertize (substring i (match-end 0))
-                                   'face 'anything-w3m-bookmarks-face
-                                   'help-echo (anything-c-delicious-bookmarks-get-value i))))))
+                                   'face 'helm-w3m-bookmarks-face
+                                   'help-echo (helm-c-delicious-bookmarks-get-value i))))))
 
-(defun anything-delicious ()
-  "Start anything-delicious outside of main anything"
+(defun helm-delicious ()
+  "Start helm-delicious outside of main helm"
   (interactive)
-  (setq anything-source-is-delicious t)
-  (let ((rem-pattern (if anything-delicious-last-pattern
-                         anything-delicious-last-pattern)))
-    (anything 'anything-c-source-delicious-tv
-              rem-pattern nil nil nil "*Anything Delicious*")))
+  (setq helm-source-is-delicious t)
+  (let ((rem-pattern (if helm-delicious-last-pattern
+                         helm-delicious-last-pattern)))
+    (helm 'helm-c-source-delicious-tv
+              rem-pattern nil nil nil "*Helm Delicious*")))
 
-(provide 'anything-delicious)
+(provide 'helm-delicious)
 
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;; (emacswiki-post "anything-delicious.el")
-;;; anything-delicious.el ends here
+;;; helm-delicious.el ends here
