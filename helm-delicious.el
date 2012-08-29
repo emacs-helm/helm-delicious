@@ -1,4 +1,4 @@
-;;; helm-delicious.el --- 
+;;; helm-delicious.el --- helm extensions for delicious bookmarks
 
 ;; Copyright (C) 2008, 2009 Thierry Volpiatto, all rights reserved
 
