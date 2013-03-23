@@ -159,8 +159,8 @@ finding the path of your .authinfo file that is normally ~/.authinfo."
   "Get the delicious bookmarks asynchronously with external program wget."
   (interactive)
   (let ((fmd-command "wget -q --no-check-certificate -O %s --user %s --password %s %s")
-        helm-delicious-user
-        helm-delicious-password)
+        (helm-delicious-user helm-delicious-user)
+        (helm-delicious-password helm-delicious-password))
     (unless (and helm-delicious-user helm-delicious-password)
       (helm-delicious-authentify))
     (message "Syncing with Delicious in Progress...")
@@ -189,8 +189,8 @@ finding the path of your .authinfo file that is normally ~/.authinfo."
                       (helm-c-delicious-bookmarks-get-value candidate)))
          (url-api (format helm-c-delicious-api-url-delete
                           url))
-         helm-delicious-user
-         helm-delicious-password
+         (helm-delicious-user helm-delicious-user)
+         (helm-delicious-password helm-delicious-password)
          auth)
     (unless (and helm-delicious-user helm-delicious-password)
       (helm-delicious-authentify))
@@ -277,8 +277,8 @@ finding the path of your .authinfo file that is normally ~/.authinfo."
         (replace-regexp-in-string " " "+" description))
   (let* ((url     w3m-current-url)
          (url-api (format helm-c-delicious-api-url-add url description tag))
-         helm-delicious-user
-         helm-delicious-password
+         (helm-delicious-user helm-delicious-user)
+         (helm-delicious-password helm-delicious-password)
          auth)
     (unless (and helm-delicious-user helm-delicious-password)
       (helm-delicious-authentify))
