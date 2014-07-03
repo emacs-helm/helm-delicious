@@ -6,7 +6,8 @@
 ;; Description: 
 ;; Author: thierry
 ;; Maintainer: 
-;; URL: 
+;; URL: https://github.com/emacs-helm/helm-delicious
+;; Package-Requires: ((helm "1.5.3"))
 ;; Keywords: 
 ;; Compatibility: 
  
