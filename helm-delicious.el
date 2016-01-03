@@ -80,6 +80,9 @@
 (require 'xml)
 
 ;; User variables
+
+(defvar helm-c-delicious-api-host "api.del.icio.us")
+
 (defvar helm-c-delicious-api-url
   "https://api.del.icio.us/v1/posts/all?"
   "Url used to retrieve all bookmarks")
@@ -148,7 +151,7 @@ You have to setup correctly `auth-sources' to make this function
 finding the path of your .authinfo file that is normally ~/.authinfo."
   (let ((helm-delicious-auth
          (auth-source-user-or-password  '("login" "password")
-                                        "api.del.icio.us:443"
+                                        (concat helm-c-delicious-api-host ":443")
                                         "https")))
     (when helm-delicious-auth
       (setq helm-delicious-user (car helm-delicious-auth)
@@ -158,7 +161,7 @@ finding the path of your .authinfo file that is normally ~/.authinfo."
 (defun helm-wget-retrieve-delicious (&optional sentinel)
   "Get the delicious bookmarks asynchronously with external program wget."
   (interactive)
-  (let ((fmd-command "wget -q --no-check-certificate -O %s --user %s --password %s %s")
+  (let ((fmd-command "wget -q --no-check-certificate -O %s --user %s --password \"%s\" %s")
         helm-delicious-user
         helm-delicious-password)
     (unless (and helm-delicious-user helm-delicious-password)
